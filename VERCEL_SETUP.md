@@ -90,3 +90,10 @@ Para producción, se recomienda usar:
 - **Error 500**: Generalmente por falta de `DATABASE_URL`
 - **Timeout**: Problemas de conexión a la base de datos
 - **Prisma errors**: Esquema no generado o variables de entorno incorrectas
+- **"Prisma has detected that this project was built on @vercel.json"**: Error de configuración de Prisma en Vercel
+
+#### Solución para Error de Prisma en Vercel:
+
+1. **Verifica que `DATABASE_URL` esté configurada** en las variables de entorno
+2. **El script `vercel-build`** se ejecuta automáticamente durante el despliegue
+3. **Si persiste el error**, verifica que la base de datos esté accesible desde Vercel

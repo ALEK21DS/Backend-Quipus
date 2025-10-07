@@ -70,6 +70,11 @@ app.get('/health', async (req, res) => {
   }
 })
 
+// Manejo de favicon.ico
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end()
+})
+
 // Ruta raíz
 app.get('/', (req, res) => {
   res.json({
