@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "node vercel-build.js",
-  "installCommand": "npm install && npx prisma generate",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm ci",
   "functions": {
     "api/index.js": {
-      "runtime": "@vercel/node",
+      "runtime": "nodejs20.x",
       "maxDuration": 30
     },
     "api/test.js": {
-      "runtime": "@vercel/node",
+      "runtime": "nodejs20.x",
       "maxDuration": 10
     }
   },
