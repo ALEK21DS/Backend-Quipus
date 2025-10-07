@@ -94,7 +94,7 @@ app.get('/', (req, res) => {
     }
   })
 })
-
+ 
 // Manejo de errores (debe ir al final)
 app.use(errorHandler)
 
