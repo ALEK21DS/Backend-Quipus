@@ -95,5 +95,12 @@ Para producción, se recomienda usar:
 #### Solución para Error de Prisma en Vercel:
 
 1. **Verifica que `DATABASE_URL` esté configurada** en las variables de entorno
-2. **El script `vercel-build`** se ejecuta automáticamente durante el despliegue
-3. **Si persiste el error**, verifica que la base de datos esté accesible desde Vercel
+2. **El script `postinstall`** ejecuta `prisma generate` automáticamente
+3. **El `buildCommand` en vercel.json** asegura la generación durante el build
+4. **Si persiste el error**, verifica que la base de datos esté accesible desde Vercel
+
+### Configuración Automática:
+
+- ✅ `postinstall` script ejecuta `prisma generate`
+- ✅ `buildCommand` en vercel.json
+- ✅ `.npmrc` para configuración optimizada
