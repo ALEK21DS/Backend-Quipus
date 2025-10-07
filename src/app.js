@@ -2,6 +2,9 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 
+// Importar configuración de base de datos
+const prisma = require('./config/database')
+
 // Importar rutas
 const usuariosRoutes = require('./routes/usuarios')
 const sesionesRoutes = require('./routes/sesiones')
@@ -42,14 +45,29 @@ app.use('/api/respuestas', respuestasRoutes)
 app.use('/api/notas', notasRoutes)
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    message: 'Proyecto Quipus Backend funcionando correctamente',
-    version: '2.0.0',
-    architecture: 'Clean Architecture'
-  })
+app.get('/health', async (req, res) => {
+  try {
+    // Probar conexión a la base de datos
+    await prisma.$queryRaw`SELECT 1`
+    
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      message: 'Proyecto Quipus Backend funcionando correctamente',
+      version: '2.0.0',
+      architecture: 'Clean Architecture',
+      database: 'Connected'
+    })
+  } catch (error) {
+    console.error('Database connection error:', error)
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      message: 'Error de conexión a la base de datos',
+      database: 'Disconnected',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Database connection failed'
+    })
+  }
 })
 
 // Ruta raíz

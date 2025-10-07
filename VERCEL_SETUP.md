@@ -64,3 +64,29 @@ Para producción, se recomienda usar:
 - La configuración de CORS incluye dominios de Vercel
 - Prisma se genera automáticamente durante el build
 - El timeout máximo está configurado a 30 segundos
+
+## Debugging
+
+### Endpoints de Prueba
+
+1. **Endpoint básico**: `https://tu-dominio.vercel.app/test`
+   - Prueba simple sin base de datos
+   - Debería funcionar siempre
+
+2. **Health check**: `https://tu-dominio.vercel.app/health`
+   - Prueba la conexión a la base de datos
+   - Verifica que Prisma funcione
+
+### Verificar Logs
+
+1. Ve al dashboard de Vercel
+2. Selecciona tu proyecto
+3. Ve a la pestaña "Functions"
+4. Haz clic en la función que falla
+5. Revisa los logs para ver el error específico
+
+### Problemas Comunes
+
+- **Error 500**: Generalmente por falta de `DATABASE_URL`
+- **Timeout**: Problemas de conexión a la base de datos
+- **Prisma errors**: Esquema no generado o variables de entorno incorrectas
