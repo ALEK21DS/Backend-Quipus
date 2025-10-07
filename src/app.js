@@ -80,7 +80,7 @@ app.use((req, res) => {
     success: false,
     error: 'Ruta no encontrada',
     message: `La ruta ${req.originalUrl} no existe`,
-    availableEndpoints: {
+    availableEndpoints: { 
       usuarios: '/api/usuarios',
       sesiones: '/api/sesiones',
       respuestas: '/api/respuestas',
