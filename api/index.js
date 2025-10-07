@@ -15,16 +15,19 @@ try {
   module.exports = app
 } catch (error) {
   console.error('Error loading app:', error)
+  console.error('Error stack:', error.stack)
   
   // Handler de emergencia
   const express = require('express')
   const emergencyApp = express()
   
-  emergencyApp.get('*', (req, res) => {
+  emergencyApp.all('*', (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error de inicialización',
-      message: 'La aplicación no pudo inicializarse correctamente'
+      message: 'La aplicación no pudo inicializarse correctamente',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      hint: 'Verifica las variables de entorno DATABASE_URL y que Prisma Client esté generado'
     })
   })
   
