@@ -15,7 +15,13 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Frontend React
+  origin: [
+    'http://localhost:3000', 
+    'http://127.0.0.1:3000',
+    'https://frontend-quipus.vercel.app',
+    'https://proyecto-quipus.vercel.app',
+    /\.vercel\.app$/
+  ], // Frontend React + Vercel deployments
   credentials: true
 }))
 app.use(express.json({ limit: '10mb' }))
