@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npx prisma generate",
+  "buildCommand": "node vercel-build.js",
+  "installCommand": "npm install && npx prisma generate",
   "functions": {
     "api/index.js": {
       "runtime": "@vercel/node",

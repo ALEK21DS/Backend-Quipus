@@ -102,5 +102,13 @@ Para producción, se recomienda usar:
 ### Configuración Automática:
 
 - ✅ `postinstall` script ejecuta `prisma generate`
-- ✅ `buildCommand` en vercel.json
-- ✅ `.npmrc` para configuración optimizada
+- ✅ `buildCommand` personalizado limpia cache y genera Prisma
+- ✅ `installCommand` ejecuta Prisma durante la instalación
+- ✅ `.npmrc` desactiva cache de npm
+- ✅ Scripts múltiples para garantizar generación
+
+### Archivos de Build:
+
+- `vercel-build.js` - Script principal que limpia cache y genera Prisma
+- `prisma/vercel-build.js` - Script específico para Prisma
+- `.npmrc` - Configuración para evitar cache
