@@ -1,0 +1,17 @@
+# Archivos a ignorar en Docker para Backend
+node_modules
+npm-debug.log
+*.log
+.DS_Store
+Thumbs.db
+
+# Scripts de setup y debugging (no necesarios en producción)
+setup-database.js
+
+# Documentación
+README.md
+*.md
+
+# Archivos de entorno (se pasan via env_file)
+# Comentado para permitir que .env se copie al contenedor
+# .env

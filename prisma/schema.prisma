@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// TABLA PRINCIPAL: USUARIOS
+// ================================
+model Usuario {
+  id            String   @id @default(cuid())
+  nombre        String   @db.VarChar(100)
+  apellido      String   @db.VarChar(100)
+  edad          Int
+  curso         String   @db.VarChar(100)
+  esAdmin       Boolean  @default(false) @map("es_admin")
+  fechaRegistro DateTime @default(now()) @map("fecha_registro")
+  activo        Boolean  @default(true)
+  
+  // Relaciones
+  sesiones      SesionJuego[]
+  notas         NotaJuego[]
+  
+  // Índices únicos
+  @@unique([nombre, apellido, curso])
+  @@map("usuarios")
+}
+
+// ================================
+// TABLA: SESIONES DE JUEGO
+// ================================
+model SesionJuego {
+  id              String   @id @default(cuid())
+  usuarioId       String   @map("usuario_id")
+  fechaInicio     DateTime @default(now()) @map("fecha_inicio")
+  fechaFin        DateTime? @map("fecha_fin")
+  tiempoTotal     Int?     @map("tiempo_total") // en segundos
+  completado      Boolean  @default(false)
+  
+  // NUEVO: Estado de tiempo agotado
+  tiempoAgotado   Boolean  @default(false) @map("tiempo_agotado")
+  razonFinJuego   RazonFinJuego @default(COMPLETADO) @map("razon_fin_juego")
+  
+  // PUNTUACIÓN TOTAL (Tabla Principal)
+  puntuacionTotal Int      @default(0) @map("puntuacion_total")
+  
+  // PUNTUACIONES POR RETO
+  puntuacionReto1 Int      @default(0) @map("puntuacion_reto1")
+  puntuacionReto2 Int      @default(0) @map("puntuacion_reto2") 
+  puntuacionReto3 Int      @default(0) @map("puntuacion_reto3")
+  
+  // PUNTUACIÓN PARA TABLA DE NOTAS (Solo Reto 3 - ejercicios completados)
+  ejerciciosCompletadosReto3 Int @default(0) @map("ejercicios_completados_reto3")
+  puntuacionNotas Int @default(0) @map("puntuacion_notas") // 0-10
+  
+  // Relaciones
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  respuestasReto1 RespuestaReto1[]
+  respuestasReto2 RespuestaReto2[]
+  respuestasReto3 RespuestaReto3[]
+  notas           NotaJuego[]
+  
+  @@map("SesionJuego")
+}
+
+// ================================
+// RETO 1: 4 PREGUNTAS INDEPENDIENTES
+// ================================
+model RespuestaReto1 {
+  id            String   @id @default(cuid())
+  sesionId      String   @map("sesion_id")
+  preguntaNumero Int     @map("pregunta_numero") // 1, 2, 3, o 4
+  pregunta      String
+  opciones      Json?    // Array de opciones ["A", "B", "C", "D"] - Opcional
+  respuestaCorrecta String @map("respuesta_correcta") // "A", "B", "C", o "D"
+  respuestaUsuario String @map("respuesta_usuario") // "A", "B", "C", o "D"
+  esCorrecto    Boolean  @map("es_correcto")
+  intentoNumero Int      @map("intento_numero") // 1, 2, o 3
+  tiempoRespuesta Int    @map("tiempo_respuesta") // segundos
+  puntuacionBase Int     @map("puntuacion_base") // 100, 50, o 25
+  bonusTiempo   Int      @map("bonus_tiempo") // 0, 15, 30, o 50
+  puntuacionTotal Int    @map("puntuacion_total") // puntuacionBase + bonusTiempo
+  fechaRespuesta DateTime @default(now()) @map("fecha_respuesta")
+  
+  // Relaciones
+  sesion        SesionJuego @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  
+  @@map("RespuestaReto1")
+}
+
+// ================================
+// RETO 2: 1 PREGUNTA CON 4 OPCIONES
+// ================================
+model RespuestaReto2 {
+  id            String   @id @default(cuid())
+  sesionId      String   @map("sesion_id")
+  pregunta      String
+  opciones      Json?    // Array de 4 opciones - Opcional
+  respuestaCorrecta String @map("respuesta_correcta")
+  respuestaUsuario String @map("respuesta_usuario")
+  esCorrecto    Boolean  @map("es_correcto")
+  intentoNumero Int      @map("intento_numero") // 1, 2, o 3
+  tiempoRespuesta Int    @map("tiempo_respuesta") // segundos
+  puntuacionBase Int     @map("puntuacion_base") // 100, 50, o 25
+  bonusTiempo   Int      @map("bonus_tiempo") // 0, 15, 30, o 50
+  puntuacionTotal Int    @map("puntuacion_total") // puntuacionBase + bonusTiempo
+  fechaRespuesta DateTime @default(now()) @map("fecha_respuesta")
+  
+  // Relaciones
+  sesion        SesionJuego @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  
+  @@map("RespuestaReto2")
+}
+
+// ================================
+// RETO 3: 10 EJERCICIOS CON 3 VALIDACIONES INDEPENDIENTES
+// ================================
+model RespuestaReto3 {
+  id            String   @id @default(cuid())
+  sesionId      String   @map("sesion_id")
+  ejercicioNumero Int    @map("ejercicio_numero") // 1-10
+  ecuacionOriginal String @map("ecuacion_original") // ej: "2x² - 7x - 15"
+  
+  // Validación 1: Factores izquierda
+  validacion1Correcta Boolean @map("validacion1_correcta")
+  validacion1Intento  Int     @map("validacion1_intento") // 1, 2, o 3
+  validacion1Tiempo   Int     @map("validacion1_tiempo") // segundos
+  validacion1Puntuacion Int   @map("validacion1_puntuacion")
+  respuestaUsuario1 String @map("respuesta_usuario1") // Factores izquierda
+  
+  // Validación 2: Factores derecha
+  validacion2Correcta Boolean @map("validacion2_correcta")
+  validacion2Intento  Int     @map("validacion2_intento") // 1, 2, o 3
+  validacion2Tiempo   Int     @map("validacion2_tiempo") // segundos
+  validacion2Puntuacion Int   @map("validacion2_puntuacion")
+  respuestaUsuario2 String @map("respuesta_usuario2") // Factores derecha
+  
+  // Validación 3: Suma total
+  validacion3Correcta Boolean @map("validacion3_correcta")
+  validacion3Intento  Int     @map("validacion3_intento") // 1, 2, o 3
+  validacion3Tiempo   Int     @map("validacion3_tiempo") // segundos
+  validacion3Puntuacion Int   @map("validacion3_puntuacion")
+  respuestaUsuario3 String @map("respuesta_usuario3") // Suma total
+  
+  // Puntuación total del ejercicio (suma de las 3 validaciones)
+  puntuacionTotal Int @map("puntuacion_total")
+  
+  // Bonus de tiempo total
+  bonusTiempo    Int      @default(0) @map("bonus_tiempo")
+  
+  // Estado del ejercicio
+  completado    Boolean  @default(false)
+  fechaRespuesta DateTime @default(now()) @map("fecha_respuesta")
+  
+  // Relaciones
+  sesion        SesionJuego @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  
+  @@unique([sesionId, ejercicioNumero], name: "sesionId_ejercicioNumero")
+  @@map("RespuestaReto3")
+}
+
+// ================================
+// TABLA: NOTAS DEL JUEGO
+// ================================
+model NotaJuego {
+  id            String      @id @default(cuid())
+  usuarioId     String      @map("usuario_id")
+  sesionId      String?     @map("sesion_id")
+  contenido     String      @db.Text
+  calificacion  Float?      @map("calificacion") // Nota numérica sobre 10
+  tipoNota      TipoNota    @default(SISTEMA) @map("tipo_nota")
+  fechaCreacion DateTime    @default(now()) @map("fecha_creacion")
+  
+  // Relaciones
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  sesion        SesionJuego? @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+  
+  @@map("NotaJuego")
+}
+
+// ================================
+// ENUMERACIONES
+// ================================
+enum TipoNota {
+  PROFESOR
+  SISTEMA
+  USUARIO
+}
+
+enum RazonFinJuego {
+  COMPLETADO    // Usuario completó todos los retos
+  TIEMPO_AGOTADO // Se acabó el tiempo
+  SALIDA_MANUAL  // Usuario salió manualmente
+}
