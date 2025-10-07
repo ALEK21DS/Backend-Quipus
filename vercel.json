@@ -1,7 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run vercel-build",
-  "installCommand": "npm ci",
+  "installCommand": "npm install",
   "functions": {
     "api/index.js": {
       "runtime": "@vercel/node@2.15.10",
