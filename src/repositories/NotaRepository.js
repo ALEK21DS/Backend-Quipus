@@ -101,6 +101,33 @@ class NotaRepository {
     })
   }
 
+  // Obtener notas de una sesión
+  async findBySesion(sesionId) {
+    return await prisma.notaJuego.findMany({
+      where: { sesionId },
+      orderBy: { fechaCreacion: 'desc' },
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            curso: true,
+            edad: true
+          }
+        },
+        sesion: {
+          select: {
+            id: true,
+            fechaInicio: true,
+            puntuacionTotal: true,
+            puntuacionNotas: true
+          }
+        }
+      }
+    })
+  }
+
   // Actualizar nota
   async update(id, notaData) {
     return await prisma.notaJuego.update({
