@@ -19,6 +19,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }
@@ -75,6 +79,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }
@@ -93,6 +101,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }
@@ -120,6 +132,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }
@@ -132,7 +148,11 @@ class NotaRepository {
   async update(id, notaData) {
     return await prisma.notaJuego.update({
       where: { id },
-      data: notaData,
+      data: {
+        ...notaData,
+        // Permitir actualizar calificación si viene en notaData
+        ...(notaData.calificacion !== undefined && { calificacion: notaData.calificacion })
+      },
       include: {
         usuario: {
           select: {
@@ -147,6 +167,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }
@@ -224,6 +248,10 @@ class NotaRepository {
           select: {
             id: true,
             fechaInicio: true,
+            fechaFin: true,
+            tiempoTotal: true,
+            completado: true,
+            tiempoAgotado: true,
             puntuacionTotal: true,
             puntuacionNotas: true
           }

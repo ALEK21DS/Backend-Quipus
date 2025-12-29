@@ -119,18 +119,21 @@ class SesionService {
     }
     
     // Verificar si ya existe una nota para esta sesión y actualizarla, o crear una nueva
+    // IMPORTANTE: NO actualizar la calificación aquí porque ya se está actualizando progresivamente
+    // en cada respuesta correcta. Solo actualizar el mensaje al final si la nota ya existe.
     try {
       const notasExistentes = await notaRepository.findBySesion(sesion.id)
       const notaSistema = notasExistentes.find(n => n.tipoNota === 'SISTEMA' && n.sesionId === sesion.id)
       
       if (notaSistema) {
-        // Actualizar nota existente
+        // Solo actualizar el mensaje, NO la calificación (ya se actualizó progresivamente)
         await notaRepository.update(notaSistema.id, {
-          contenido: mensaje,
-          calificacion: calificacion
+          contenido: mensaje
+          // NO actualizar calificacion aquí - se actualiza progresivamente en cada respuesta
         })
       } else {
-        // Crear nueva nota
+        // Si no existe nota, crear una nueva (esto no debería pasar si se actualizó progresivamente)
+        // Pero por si acaso, usar la calificación calculada
         await notaRepository.create({
           usuarioId: sesion.usuarioId,
           sesionId: sesion.id,

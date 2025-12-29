@@ -175,6 +175,49 @@ class NotaService {
     const todasLasNotas = await this.obtenerTodasNotas(limit, offset)
     return todasLasNotas.filter(nota => nota.tipoNota === tipoNota)
   }
+
+  // Actualizar o crear nota del juego sumando puntos
+  // IMPORTANTE: Se valida por sesionId, no por notaId, porque cada sesión tiene su propia nota del sistema
+  // Un usuario puede tener múltiples sesiones (múltiples intentos), cada una con su propia nota
+  async actualizarNotaJuego(usuarioId, sesionId, puntosObtenidos) {
+    if (!usuarioId || !sesionId || puntosObtenidos === undefined) {
+      throw new Error('Usuario ID, Sesión ID y puntos obtenidos son requeridos')
+    }
+
+    // Convertir puntos a nota del juego (dividir entre 10)
+    const notaAgregar = puntosObtenidos / 10
+
+    // Buscar nota existente del sistema para esta sesión específica
+    // Cada sesión tiene su propia nota del sistema que se va actualizando progresivamente
+    const notasExistentes = await this.notaRepository.findBySesion(sesionId)
+    const notaSistema = notasExistentes.find(n => n.tipoNota === 'SISTEMA')
+
+    if (notaSistema) {
+      // Actualizar nota existente de esta sesión sumando la nueva nota
+      // Se usa el ID de la nota para actualizar, pero se validó por sesionId
+      const calificacionAnterior = notaSistema.calificacion || 0
+      const nuevaCalificacion = Math.min(10, calificacionAnterior + notaAgregar) // Máximo 10
+      
+      return await this.notaRepository.update(notaSistema.id, {
+        calificacion: nuevaCalificacion
+      })
+    } else {
+      // Crear nueva nota del sistema para esta sesión
+      // Verificar que la sesión existe
+      const sesion = await this.sesionRepository.findById(sesionId)
+      if (!sesion) {
+        throw new Error('Sesión no encontrada')
+      }
+
+      return await this.notaRepository.create({
+        usuarioId,
+        sesionId,
+        contenido: `Nota del juego: ${notaAgregar.toFixed(2)}/10`,
+        calificacion: Math.min(10, notaAgregar), // Máximo 10
+        tipoNota: 'SISTEMA'
+      })
+    }
+  }
 }
 
 module.exports = NotaService
