@@ -43,24 +43,55 @@ class NotaRepository {
   }
 
   // Obtener todas las notas
-  async findAll(limit = 100, offset = 0, curso = null) {
+  async findAll(limit = 100, offset = 0, curso = null, nombre = null, apellido = null, edad = null) {
     let whereClause = {
       usuario: {
         esAdmin: false // Excluir notas del admin
       }
     }
     
+    // Construir condiciones de filtrado para el usuario
+    const condicionesUsuario = {
+      esAdmin: false
+    }
+    
     if (curso) {
-      whereClause.usuario = {
-        ...whereClause.usuario,
-        curso: {
-          equals: curso,
-          mode: 'insensitive'
-        }
+      condicionesUsuario.curso = {
+        contains: curso,
+        mode: 'insensitive'
       }
     }
     
-    return await prisma.notaJuego.findMany({
+    if (nombre) {
+      condicionesUsuario.nombre = {
+        contains: nombre,
+        mode: 'insensitive'
+      }
+    }
+    
+    if (apellido) {
+      condicionesUsuario.apellido = {
+        contains: apellido,
+        mode: 'insensitive'
+      }
+    }
+    
+    if (edad) {
+      const edadNum = parseInt(edad)
+      if (!isNaN(edadNum)) {
+        condicionesUsuario.edad = edadNum
+      }
+    }
+    
+    whereClause.usuario = condicionesUsuario
+    
+    // Obtener el total de registros
+    const total = await prisma.notaJuego.count({
+      where: whereClause
+    })
+    
+    // Obtener los registros paginados
+    const notas = await prisma.notaJuego.findMany({
       where: whereClause,
       orderBy: { fechaCreacion: 'desc' },
       take: limit,
@@ -89,6 +120,13 @@ class NotaRepository {
         }
       }
     })
+    
+    return {
+      notas,
+      total,
+      limit,
+      offset
+    }
   }
 
   // Obtener notas de un usuario

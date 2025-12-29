@@ -47,11 +47,12 @@ class NotaService {
   }
 
   // Obtener todas las notas con filtros
-  async obtenerTodasNotas(limit = 100, offset = 0, curso = null) {
+  async obtenerTodasNotas(limit = 100, offset = 0, curso = null, nombre = null, apellido = null, edad = null) {
     if (limit > 200) limit = 200 // Limitar máximo 200 resultados
     if (offset < 0) offset = 0
     
-    return await this.notaRepository.findAll(limit, offset, curso)
+    const resultado = await this.notaRepository.findAll(limit, offset, curso, nombre, apellido, edad)
+    return resultado
   }
 
   // Obtener notas de un usuario específico

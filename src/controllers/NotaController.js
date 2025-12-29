@@ -37,20 +37,25 @@ class NotaController {
   // Obtener todas las notas
   async obtenerTodasNotas(req, res) {
     try {
-      const { limite = 100, offset = 0, curso } = req.query
+      const { limite = 100, offset = 0, curso, nombre, apellido, edad } = req.query
       const resultado = await this.notaService.obtenerTodasNotas(
         parseInt(limite), 
         parseInt(offset), 
-        curso
+        curso || null,
+        nombre || null,
+        apellido || null,
+        edad || null
       )
       
       res.json({
         success: true,
-        data: resultado,
-        total: resultado.length,
+        data: resultado.notas,
+        total: resultado.total,
         paginacion: {
-          limite: parseInt(limite),
-          offset: parseInt(offset)
+          limite: resultado.limit,
+          offset: resultado.offset,
+          totalPaginas: Math.ceil(resultado.total / resultado.limit),
+          paginaActual: Math.floor(resultado.offset / resultado.limit) + 1
         }
       })
     } catch (error) {
