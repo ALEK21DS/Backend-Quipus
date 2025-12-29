@@ -37,27 +37,67 @@ class SesionRepository {
 
   // Actualizar sesión
   async update(id, sesionData) {
-    // Limpiar datos: eliminar campos con nombres incorrectos (snake_case)
+    // Limpiar datos: eliminar campos con nombres incorrectos (snake_case) y convertirlos a camelCase
     const cleanData = { ...sesionData };
-    delete cleanData.fecha_fin;
-    delete cleanData.fecha_inicio;
-    delete cleanData.tiempo_total;
-    delete cleanData.tiempo_agotado;
-    delete cleanData.razon_fin_juego;
-    delete cleanData.puntuacion_total;
-    delete cleanData.puntuacion_reto1;
-    delete cleanData.puntuacion_reto2;
-    delete cleanData.puntuacion_reto3;
-    delete cleanData.ejercicios_completados_reto3;
-    delete cleanData.puntuacion_notas;
-    delete cleanData.usuario_id;
+    
+    // Convertir campos snake_case a camelCase
+    if (cleanData.fecha_fin !== undefined) {
+      cleanData.fechaFin = cleanData.fecha_fin;
+      delete cleanData.fecha_fin;
+    }
+    if (cleanData.fecha_inicio !== undefined) {
+      cleanData.fechaInicio = cleanData.fecha_inicio;
+      delete cleanData.fecha_inicio;
+    }
+    if (cleanData.tiempo_total !== undefined) {
+      cleanData.tiempoTotal = cleanData.tiempo_total;
+      delete cleanData.tiempo_total;
+    }
+    if (cleanData.tiempo_agotado !== undefined) {
+      cleanData.tiempoAgotado = cleanData.tiempo_agotado;
+      delete cleanData.tiempo_agotado;
+    }
+    if (cleanData.razon_fin_juego !== undefined) {
+      cleanData.razonFinJuego = cleanData.razon_fin_juego;
+      delete cleanData.razon_fin_juego;
+    }
+    if (cleanData.puntuacion_total !== undefined) {
+      cleanData.puntuacionTotal = cleanData.puntuacion_total;
+      delete cleanData.puntuacion_total;
+    }
+    if (cleanData.puntuacion_reto1 !== undefined) {
+      cleanData.puntuacionReto1 = cleanData.puntuacion_reto1;
+      delete cleanData.puntuacion_reto1;
+    }
+    if (cleanData.puntuacion_reto2 !== undefined) {
+      cleanData.puntuacionReto2 = cleanData.puntuacion_reto2;
+      delete cleanData.puntuacion_reto2;
+    }
+    if (cleanData.puntuacion_reto3 !== undefined) {
+      cleanData.puntuacionReto3 = cleanData.puntuacion_reto3;
+      delete cleanData.puntuacion_reto3;
+    }
+    if (cleanData.ejercicios_completados_reto3 !== undefined) {
+      cleanData.ejerciciosCompletadosReto3 = cleanData.ejercicios_completados_reto3;
+      delete cleanData.ejercicios_completados_reto3;
+    }
+    if (cleanData.puntuacion_notas !== undefined) {
+      cleanData.puntuacionNotas = cleanData.puntuacion_notas;
+      delete cleanData.puntuacion_notas;
+    }
+    if (cleanData.usuario_id !== undefined) {
+      cleanData.usuarioId = cleanData.usuario_id;
+      delete cleanData.usuario_id;
+    }
+    
+    // Si no se proporciona fechaFin explícitamente, usar la fecha actual
+    if (!cleanData.fechaFin) {
+      cleanData.fechaFin = new Date();
+    }
     
     return await prisma.sesionJuego.update({
       where: { id },
-      data: {
-        ...cleanData,
-        fechaFin: new Date()
-      },
+      data: cleanData,
       include: {
         usuario: {
           select: {

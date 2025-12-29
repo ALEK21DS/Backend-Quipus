@@ -76,6 +76,19 @@ class RespuestaService {
       respuesta = await this.respuestaRepository.createRespuestaReto1(respuestaData)
     }
     
+    // Si la respuesta es correcta, actualizar la nota del juego
+    // Cada pregunta correcta vale 2.5 puntos, se divide entre 10 para obtener la nota
+    if (esCorrecto) {
+      const NotaService = require('./NotaService')
+      const notaService = new NotaService()
+      try {
+        await notaService.actualizarNotaJuego(sesion.usuarioId, sesionId, 2.5)
+      } catch (error) {
+        console.error('Error al actualizar nota del juego:', error)
+        // No lanzar error para no interrumpir el flujo
+      }
+    }
+    
     return respuesta
   }
 
@@ -142,6 +155,21 @@ class RespuestaService {
       respuesta = await this.respuestaRepository.createRespuestaReto2(respuestaData)
     }
     
+    // Calcular puntos obtenidos: cada blank correcto vale 5 puntos
+    const puntosObtenidos = casillasCorrectas * 5
+    
+    // Actualizar la nota del juego: puntos obtenidos / 10
+    if (puntosObtenidos > 0) {
+      const NotaService = require('./NotaService')
+      const notaService = new NotaService()
+      try {
+        await notaService.actualizarNotaJuego(sesion.usuarioId, sesionId, puntosObtenidos)
+      } catch (error) {
+        console.error('Error al actualizar nota del juego:', error)
+        // No lanzar error para no interrumpir el flujo
+      }
+    }
+    
     return respuesta
   }
 
@@ -156,7 +184,8 @@ class RespuestaService {
       ecuacionOriginal = 'Ecuación no especificada',  // Valor por defecto
       validacion1 = { correcta: true, intento: 1, tiempo: 10, respuesta: 'Validación 1' },
       validacion2 = { correcta: true, intento: 1, tiempo: 10, respuesta: 'Validación 2' },
-      validacion3 = { correcta: true, intento: 1, tiempo: 10, respuesta: 'Validación 3' }
+      validacion3 = { correcta: true, intento: 1, tiempo: 10, respuesta: 'Validación 3' },
+      puntuacionFinal = 0  // Puntuación final del ejercicio (0-7)
     } = datos
     
     // Validaciones
@@ -164,8 +193,20 @@ class RespuestaService {
       throw new Error('Datos incompletos para Reto 3')
     }
     
-    // Verificar que la sesión existe
-    const sesion = await this.sesionRepository.findById(sesionId)
+    // Verificar que la sesión existe (con timeout más largo)
+    let sesion
+    try {
+      sesion = await Promise.race([
+        this.sesionRepository.findById(sesionId),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout al buscar sesión')), 15000)
+        )
+      ])
+    } catch (error) {
+      console.error('Error al buscar sesión:', error)
+      throw new Error('Error al verificar sesión. Intenta nuevamente.')
+    }
+    
     if (!sesion) {
       throw new Error('Sesión no encontrada')
     }
@@ -187,8 +228,20 @@ class RespuestaService {
     const bonusTiempo3 = validacion3.correcta ? calcularBonusTiempoReto3(validacion3.tiempo) : 0
     const bonusTiempo = bonusTiempo1 + bonusTiempo2 + bonusTiempo3
     
-    // Verificar si ya existe una respuesta para este ejercicio
-    const respuestaExistente = await this.respuestaRepository.findRespuestaReto3BySesionAndEjercicio(sesionId, ejercicioNumero)
+    // Verificar si ya existe una respuesta para este ejercicio (con timeout)
+    let respuestaExistente
+    try {
+      respuestaExistente = await Promise.race([
+        this.respuestaRepository.findRespuestaReto3BySesionAndEjercicio(sesionId, ejercicioNumero),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout al buscar respuesta existente')), 15000)
+        )
+      ])
+    } catch (error) {
+      console.error('Error al buscar respuesta existente:', error)
+      // Continuar como si no existiera para no bloquear el flujo
+      respuestaExistente = null
+    }
     
     const respuestaData = {
       sesionId,
@@ -219,6 +272,19 @@ class RespuestaService {
       respuesta = await this.respuestaRepository.updateRespuestaReto3(respuestaExistente.id, respuestaData)
     } else {
       respuesta = await this.respuestaRepository.createRespuestaReto3(respuestaData)
+    }
+    
+    // Actualizar la nota del juego: puntuación final / 10
+    // La puntuación final ya viene calculada desde el frontend (7 puntos iniciales - penalizaciones)
+    if (puntuacionFinal > 0) {
+      const NotaService = require('./NotaService')
+      const notaService = new NotaService()
+      try {
+        await notaService.actualizarNotaJuego(sesion.usuarioId, sesionId, puntuacionFinal)
+      } catch (error) {
+        console.error('Error al actualizar nota del juego:', error)
+        // No lanzar error para no interrumpir el flujo
+      }
     }
     
     return respuesta

@@ -94,37 +94,56 @@ class SesionService {
     const NotaRepository = require('../repositories/NotaRepository')
     const notaRepository = new NotaRepository()
     
-    // Calcular calificación sobre 10 basada en ejercicios del Reto 3 completados
-    // Hay 10 ejercicios en total en el Reto 3
-    const ejerciciosCompletados = puntuaciones.ejerciciosCompletadosReto3 || 0
-    const calificacion = ejerciciosCompletados // Calificación directa: 1 ejercicio = 1 punto
+    // Usar puntuacionNotas (0-10) que ya viene calculada desde el frontend
+    // Esta se calcula como puntuacionTotal / 10
+    const calificacion = puntuaciones.puntuacionNotas || 0
     
-    // Calcular porcentaje total del juego
-    const porcentajeTotal = (puntuaciones.puntuacionTotal / 3000) * 100
+    // Solo crear nota si la calificación es mayor a 0
+    if (calificacion === 0) {
+      return // No crear nota si la calificación es 0
+    }
+    
+    // Calcular porcentaje total del juego (sobre 100 puntos)
+    const porcentajeTotal = (puntuaciones.puntuacionTotal / 100) * 100
     
     // Generar mensaje de retroalimentación
     let mensaje = ''
     if (calificacion === 10) {
-      mensaje = `¡Excelente! Completaste los 10 ejercicios de factorización perfectamente. Puntuación total: ${puntuaciones.puntuacionTotal} puntos (${Math.round(porcentajeTotal)}%).`
+      mensaje = `¡Excelente! Obtuviste la máxima calificación. Puntuación total: ${puntuaciones.puntuacionTotal}/100 puntos (${Math.round(porcentajeTotal)}%).`
     } else if (calificacion >= 7) {
-      mensaje = `¡Muy bien! Completaste ${ejerciciosCompletados} de 10 ejercicios de factorización. Puntuación total: ${puntuaciones.puntuacionTotal} puntos (${Math.round(porcentajeTotal)}%). ¡Sigue practicando!`
+      mensaje = `¡Muy bien! Obtuviste ${calificacion}/10. Puntuación total: ${puntuaciones.puntuacionTotal}/100 puntos (${Math.round(porcentajeTotal)}%). ¡Sigue practicando!`
     } else if (calificacion >= 5) {
-      mensaje = `Buen esfuerzo. Completaste ${ejerciciosCompletados} de 10 ejercicios de factorización. Puntuación total: ${puntuaciones.puntuacionTotal} puntos (${Math.round(porcentajeTotal)}%). Te recomendamos repasar el método del Aspa.`
+      mensaje = `Buen esfuerzo. Obtuviste ${calificacion}/10. Puntuación total: ${puntuaciones.puntuacionTotal}/100 puntos (${Math.round(porcentajeTotal)}%). Te recomendamos repasar los conceptos.`
     } else {
-      mensaje = `Completaste ${ejerciciosCompletados} de 10 ejercicios de factorización. Puntuación total: ${puntuaciones.puntuacionTotal} puntos (${Math.round(porcentajeTotal)}%). El método del Aspa requiere práctica. ¡No te rindas!`
+      mensaje = `Obtuviste ${calificacion}/10. Puntuación total: ${puntuaciones.puntuacionTotal}/100 puntos (${Math.round(porcentajeTotal)}%). ¡Sigue practicando y no te rindas!`
     }
     
-    // Crear UNA SOLA nota con calificación
+    // Verificar si ya existe una nota para esta sesión y actualizarla, o crear una nueva
+    // IMPORTANTE: NO actualizar la calificación aquí porque ya se está actualizando progresivamente
+    // en cada respuesta correcta. Solo actualizar el mensaje al final si la nota ya existe.
     try {
-      await notaRepository.create({
-        usuarioId: sesion.usuarioId,
-        sesionId: sesion.id,
-        contenido: mensaje,
-        calificacion: calificacion,
-        tipoNota: 'SISTEMA'
-      })
+      const notasExistentes = await notaRepository.findBySesion(sesion.id)
+      const notaSistema = notasExistentes.find(n => n.tipoNota === 'SISTEMA' && n.sesionId === sesion.id)
+      
+      if (notaSistema) {
+        // Solo actualizar el mensaje, NO la calificación (ya se actualizó progresivamente)
+        await notaRepository.update(notaSistema.id, {
+          contenido: mensaje
+          // NO actualizar calificacion aquí - se actualiza progresivamente en cada respuesta
+        })
+      } else {
+        // Si no existe nota, crear una nueva (esto no debería pasar si se actualizó progresivamente)
+        // Pero por si acaso, usar la calificación calculada
+        await notaRepository.create({
+          usuarioId: sesion.usuarioId,
+          sesionId: sesion.id,
+          contenido: mensaje,
+          calificacion: calificacion,
+          tipoNota: 'SISTEMA'
+        })
+      }
     } catch (error) {
-      console.error('Error al crear nota:', error)
+      console.error('Error al crear/actualizar nota:', error)
     }
   }
 
