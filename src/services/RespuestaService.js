@@ -193,8 +193,20 @@ class RespuestaService {
       throw new Error('Datos incompletos para Reto 3')
     }
     
-    // Verificar que la sesión existe
-    const sesion = await this.sesionRepository.findById(sesionId)
+    // Verificar que la sesión existe (con timeout más largo)
+    let sesion
+    try {
+      sesion = await Promise.race([
+        this.sesionRepository.findById(sesionId),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout al buscar sesión')), 15000)
+        )
+      ])
+    } catch (error) {
+      console.error('Error al buscar sesión:', error)
+      throw new Error('Error al verificar sesión. Intenta nuevamente.')
+    }
+    
     if (!sesion) {
       throw new Error('Sesión no encontrada')
     }
@@ -216,8 +228,20 @@ class RespuestaService {
     const bonusTiempo3 = validacion3.correcta ? calcularBonusTiempoReto3(validacion3.tiempo) : 0
     const bonusTiempo = bonusTiempo1 + bonusTiempo2 + bonusTiempo3
     
-    // Verificar si ya existe una respuesta para este ejercicio
-    const respuestaExistente = await this.respuestaRepository.findRespuestaReto3BySesionAndEjercicio(sesionId, ejercicioNumero)
+    // Verificar si ya existe una respuesta para este ejercicio (con timeout)
+    let respuestaExistente
+    try {
+      respuestaExistente = await Promise.race([
+        this.respuestaRepository.findRespuestaReto3BySesionAndEjercicio(sesionId, ejercicioNumero),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout al buscar respuesta existente')), 15000)
+        )
+      ])
+    } catch (error) {
+      console.error('Error al buscar respuesta existente:', error)
+      // Continuar como si no existiera para no bloquear el flujo
+      respuestaExistente = null
+    }
     
     const respuestaData = {
       sesionId,
