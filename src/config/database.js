@@ -10,17 +10,23 @@ let databaseUrl = process.env.DATABASE_URL
 const isSupabase = databaseUrl && databaseUrl.includes('pooler.supabase.com')
 
 // Agregar parámetros de conexión si no están presentes
-if (databaseUrl && !databaseUrl.includes('connection_limit')) {
+if (databaseUrl && !databaseUrl.includes('pgbouncer=true')) {
   const separator = databaseUrl.includes('?') ? '&' : '?'
   
   if (isSupabase) {
-    // Configuración optimizada para Supabase PgBouncer
-    // Supabase ya maneja PgBouncer, solo necesitamos limitar conexiones
-    databaseUrl = `${databaseUrl}${separator}connection_limit=5&pool_timeout=10&connect_timeout=10`
+    // Configuración CRÍTICA para Supabase PgBouncer
+    // pgbouncer=true es ESENCIAL para evitar "prepared statement already exists"
+    // Supabase usa PgBouncer en modo transaction, que NO soporta prepared statements
+    databaseUrl = `${databaseUrl}${separator}pgbouncer=true&connection_limit=1&pool_timeout=10&connect_timeout=10`
   } else {
     // Para otros proveedores
-    databaseUrl = `${databaseUrl}${separator}connection_limit=5&pool_timeout=10&pgbouncer=true`
+    databaseUrl = `${databaseUrl}${separator}connection_limit=1&pool_timeout=0&pgbouncer=true`
   }
+}
+
+// Log para debug (solo en desarrollo)
+if (process.env.NODE_ENV === 'development') {
+  console.log('📊 Database URL configurada con parámetros:', databaseUrl.split('?')[1] || 'sin parámetros')
 }
 
 const prismaConfig = {
@@ -34,6 +40,7 @@ const prismaConfig = {
   // Especialmente importante con Supabase PgBouncer + Vercel
   __internal: {
     engine: {
+      cwd: process.cwd(),
       // En Vercel (serverless), evitar problemas con prepared statements
       ...(process.env.VERCEL && {
         useUds: false,
@@ -52,9 +59,21 @@ if (!globalForPrisma.prisma) {
 }
 
 // Manejo de desconexión limpia en serverless
-if (process.env.VERCEL) {
+if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+  // Desconectar al finalizar cada invocación serverless
   process.on('beforeExit', async () => {
     await prisma.$disconnect()
+  })
+  
+  // También manejar señales de terminación
+  process.on('SIGTERM', async () => {
+    await prisma.$disconnect()
+    process.exit(0)
+  })
+  
+  process.on('SIGINT', async () => {
+    await prisma.$disconnect()
+    process.exit(0)
   })
 }
 

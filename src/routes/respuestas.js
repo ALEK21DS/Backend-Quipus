@@ -26,4 +26,11 @@ router.get('/sesion/:sesionId/puntuacion', respuestaController.calcularPuntuacio
 // GET /api/respuestas/sesion/:sesionId/progreso/:reto - Obtener progreso de un reto específico
 router.get('/sesion/:sesionId/progreso/:reto', respuestaController.obtenerProgresoReto.bind(respuestaController))
 
+// GET /api/respuestas/sesion/:sesionId/detalles - Obtener detalles completos de una sesión
+router.get('/sesion/:sesionId/detalles', respuestaController.obtenerDetallesSesion.bind(respuestaController))
+
 module.exports = router
+
+// GET /api/respuestas/sesion/:sesionId/detalles - Obtener detalles completos de una sesión
+router.get('/sesion/:sesionId/detalles', respuestaController.obtenerDetallesSesion.bind(respuestaController))
+
