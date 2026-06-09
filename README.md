@@ -1,5 +1,10 @@
 # 🎮 Proyecto Quipus Backend
 
+## 📋 Presentación del Proyecto
+Este repositorio aloja la interfaz de programación de aplicaciones (API) y la base de datos de **El Quipu**, el sistema educativo gamificado para la enseñanza de factorización matemática. Construido bajo los principios de **Clean Architecture** (Arquitectura Limpia), provee servicios robustos y escalables para el manejo de sesiones de juego, almacenamiento y cálculo de puntuaciones acumuladas, retroalimentación de respuestas en tiempo real y el registro y control de notas escolares para profesores.
+
+---
+
 Backend para el juego educativo "Los Nudos del Saber: Aventura Matemática" implementado con Clean Architecture.
 
 ## 🏗️ Arquitectura
@@ -212,7 +217,13 @@ docker-compose down
 4. Push al branch (`git push origin feature/AmazingFeature`)
 5. Abrir Pull Request
 
-## 📄 Licencia
+## 📄 Derechos de Autor & Atribuciones
 
-Este proyecto está bajo la Licencia ISC.
-"# Backend-Quipus" 
+Este proyecto es propiedad intelectual exclusiva de sus autoras y está protegido bajo las leyes internacionales de propiedad industrial y derechos de autor.
+
+* **Propietarias de la obra intelectual**: 
+  * 👩‍💻 **Daniela Abigail Guncha Sevillano**
+  * 👩‍💻 **Camila Jeamileth Loayza Villacís**
+* **Desarrollado por**: 
+  * 🛠️ **Brandon Pesantez**
+
